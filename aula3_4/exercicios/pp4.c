@@ -1,76 +1,80 @@
 #include <stdio.h>
-/*
-A questão é a seguinte: A peça de xadrez chamada cavalo pode 
-se mover pelo tabuleiro vazio e tocar cada uma das 64 casas 
-apenas uma única vez? Escreva um programa que executa o passeio 
-do cavalo. Sugestão: utilize dois arrays de 8 posições cada, um 
-para representar movimentos na horizontal e um para representar 
-movimentos na vertical.
-*/
-int main(void) {
-    
-    int posicoes[8][8];
-    int posX = 0;
-    int posY = 0;
-    int casas = 1;
+#include <stdlib.h>
+#include <unistd.h>
 
-    printf("Posição X inicial do cavalo: ");
-    scanf("%d", &posX);
-    printf("Posição Y inicial do cavalo: ");
+#define NONE        "\033[0m"
+#define C_GREEN     "\033[32m"
+#define BG_GREEN    "\033[42m"
+
+int andar(int posX, int posY, int tabuleiro[8][8], int horizontal[], int vertical[], int mov);
+
+/* Algoritmo do caminho do cavalo
+ * com animação sujerida pelo professor.
+ *
+ * ~Fiz por força bruta, então pode demorar um pouco~
+ */
+int main(void) 
+{
+    int tabuleiro[8][8] = {0}; //Matriz que representa o tabuleiro
+    int horizontal[8] = {2, 1, -1, -2, -2, -1,  1,  2}; //Movimentos possíveis na horizontal
+    int vertical[8] = {1, 2,  2,  1, -1, -2, -2, -1}; //Movimentos possíveis na vertical
+    int posX = 0; //Posição horizontal da peça
+    int posY = 0; //Posição vertical da peça
+    
+    //Determinando posição inicial da peça
+    printf("Posição inicial do cavalo: ");
+    scanf("%d", &posX); 
     scanf("%d", &posY);
 
-    posicoes[posX][posY] = 1;
+    tabuleiro[posX][posY] = 1; //Marca a posição inicial como percorrida
 
-    while (casas < 64)
+    andar(posX, posY, tabuleiro, horizontal, vertical, 1); //Andamos com a peça
+    
+    return 0;
+}
+
+//Função recursiva que faz o cavalo percorrer o tabuleiro
+int andar(int posX, int posY, int tabuleiro[8][8], int horizontal[], int vertical[], int mov) {
+    ////////// ANIMAÇÃO ///////////
+    sleep(1);
+    for (int i = 0; i < 8; i++)
     {
-        printf("\n%d casas passadas\n", casas);
-        int moverX = 0;
-        int moverY = 0;
-        int escolha = 0;
-
-        printf("\nDeseja jogar X ou Y antes? [0 para X, 1 para Y]: ");
-        scanf("%d", &escolha);
-
-        if (escolha == 0) {
-            printf("Mover X [1 ou 2 casas, + para direita, - para esquerda]: ");
-            scanf("%d", &moverX);
-            printf("Mover Y [1 ou 2 casas, + para baixo, - para cima]: ");
-            scanf("%d", &moverY);
-        } else {
-            printf("Mover Y [1 ou 2 casas, + para baixo, - para cima]: ");
-            scanf("%d", &moverY);
-            printf("Mover X [1 ou 2 casas, + para direita, - para esquerda]: ");
-            scanf("%d", &moverX);
-        }
-
-        while (posX + moverX < 0 || posY + moverY < 0 || moverX > 2 || 
-        moverX == 0 || moverX < -2 || moverY > 2 || moverY == 0 
-        || moverY < -2 || posX + moverX > 7 || posY + moverY > 7 ||
-        posicoes[posX + moverX][posY + moverY] == 1) {
-            printf("Não é possível realizar o movimento\n");
-            printf("\nDeseja jogar X ou Y antes? [0 para X, 1 para Y]: ");
-            scanf("%d", &escolha);
-
-            if (escolha == 0) {
-                printf("Mover X [1 ou 2 casas, + para direita, - para esquerda]: ");
-                scanf("%d", &moverX);
-                printf("Mover Y [1 ou 2 casas, + para baixo, - para cima]: ");
-                scanf("%d", &moverY);
+        for (int j = 0; j < 8; j++)
+        {
+            if (mov == tabuleiro[i][j]) {
+                printf("%s%4d%s", BG_GREEN, tabuleiro[i][j], NONE);
             } else {
-                printf("Mover Y [1 ou 2 casas, + para baixo, - para cima]: ");
-                scanf("%d", &moverY);
-                printf("Mover X [1 ou 2 casas, + para direita, - para esquerda]: ");
-                scanf("%d", &moverX);
+                printf("%4d", tabuleiro[i][j]);
             }
         }
+        printf("\n\n");
+    }
 
-        posX += moverX;
-        posY += moverY;
+    printf("\n\n");
+    //////////////////////////////
 
-        posicoes[posX][posY] = 1;
-
-        printf("\nCavalo está em (%d,%d)\n", posX, posY);
-
-        casas ++;
+    //Condição de parada
+    if (mov == 64) {
+        return 1;
+    }
+    for (int i = 0; i < 8; i++) //Tentativa das possibilidades de movimento
+    {
+	//Calculando coordenadas da próxima posição da peça
+        int proxX = posX + horizontal[i];
+        int proxY = posY + vertical[i];
+	
+	// Se a peça poder ser movida e ir até o fim, entra na condição, senão, refaz o movimento
+        if (proxX >= 0 && proxX < 8 && proxY >= 0 && proxY < 8 && tabuleiro[proxX][proxY] == 0) {
+            //Altera posição da peça
+	    posX = proxX; 
+            posY = proxY;
+            tabuleiro[posX][posY] = mov + 1; //Marca mais uma casa no tabuleiro
+            if (andar(posX, posY, tabuleiro, horizontal, vertical, mov + 1) == 1) {
+                return 1; //Caso o algoritmo for concluído
+            } else {
+                tabuleiro[posX][posY] = 0; //Refazendo o movimento
+            }
+        }
     }    
+    return 0;
 }
